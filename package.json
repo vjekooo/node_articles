@@ -2,7 +2,7 @@
   "name": "node_articles",
   "version": "1.0.0",
   "description": "Node.js and Express articles project",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "node app"
   },
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/vjekooo/node_articles#readme",
   "dependencies": {
-    "express": "^4.15.3"
+    "express": "^4.15.3",
+    "pug": "^2.0.0-rc.2"
   }
 }
