@@ -47,6 +47,15 @@ app.get('/', (req, res) => {
   });
 });
 
+// Get single article
+app.get('/article/:id', (req,res) => {
+  Article.findById(req.params.id, (err, article) => {
+    res.render('article', {
+      article: article
+    });
+  });
+});
+
 // Add articles route
 app.get('/articles/add', (req, res) => {
   res.render('add_article', {
@@ -69,6 +78,11 @@ app.post('/articles/add', (req, res) => {
       res.redirect('/');
     }
   });
+});
+
+// 404
+app.use((req, res) => {
+  res.sendStatus(404);
 });
 
 // Start server
