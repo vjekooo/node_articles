@@ -36,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Home route
 app.get('/', (req, res) => {
   Article.find({}, (err, articles) => {
-    if(err) {
+    if (err) {
       console.log(err);
     } else {
       res.render('index', {
@@ -71,7 +71,7 @@ app.post('/articles/add', (req, res) => {
   article.body = req.body.body;
 
   article.save((err) => {
-    if(err) {
+    if (err) {
       console.log(err);
       return;
     } else {
@@ -100,7 +100,7 @@ app.post('/articles/edit/:id', (req, res) => {
   let query = {_id:req.params.id};
 
   Article.update(query, article, (err) => {
-    if(err) {
+    if (err) {
       console.log(err);
       return;
     } else {
@@ -108,6 +108,17 @@ app.post('/articles/edit/:id', (req, res) => {
     }
   });
 });
+
+// Delete article
+app.delete('/article/:id', (req, res) => {
+  let query = {_id:req.params.id};
+  Article.remove(query, (err) => {
+    if (err) {
+      console.log(err);
+    }
+    res.send('Success');
+  });
+})
 
 // 404
 app.use((req, res) => {
