@@ -3,6 +3,9 @@ const app = express();
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const expressValidator = require('express-validator');
+const connectFlash = require('connect-flash');
+const session = require('express-session');
 
 mongoose.connect('mongodb://localhost/node_articles');
 let db = mongoose.connection;
@@ -32,6 +35,38 @@ app.use(bodyParser.json());
 
 // Set public folder
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Express Session Middleware
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized: true
+}));
+
+// Express Messages Middleware
+app.use(require('connect-flash')());
+app.use(function (req, res, next) {
+  res.locals.messages = require('express-messages')(req, res);
+  next();
+});
+
+// Express Validator Middleware
+app.use(expressValidator({
+  errorFormatter: function(param, msg, value) {
+    var namespace = param.split('.')
+      , root    = namespace.shift()
+      , formParam = root;
+
+    while(namespace.length) {
+      formParam += '[' + namespace.shift() + ']';
+    }
+    return {
+      param : formParam,
+      msg   : msg,
+      value : value
+    };
+  }
+}));
 
 // Home route
 app.get('/', (req, res) => {
@@ -63,21 +98,37 @@ app.get('/articles/add', (req, res) => {
   });
 });
 
-// Add submit post route
+// Add submit POST route
 app.post('/articles/add', (req, res) => {
-  let article = new Article();
-  article.title = req.body.title;
-  article.author = req.body.author;
-  article.body = req.body.body;
 
-  article.save((err) => {
-    if (err) {
-      console.log(err);
-      return;
-    } else {
-      res.redirect('/');
-    }
-  });
+  req.checkBody('title', 'Title is required').notEmpty();
+  req.checkBody('author', 'Author is required').notEmpty();
+  req.checkBody('body', 'Body is required').notEmpty();
+
+  // Get Errors
+  let errors = req.validationErrors();
+  
+  if (errors) {
+    res.render('add_article', {
+      title: 'Add article',
+      errors: errors
+    });
+  } else {
+    let article = new Article();
+    article.title = req.body.title;
+    article.author = req.body.author;
+    article.body = req.body.body;
+
+    article.save((err) => {
+      if (err) {
+        console.log(err);
+        return;
+      } else {
+        req.flash('success', 'Article added');
+        res.redirect('/');
+      }
+    });
+  }
 });
 
 // Load edit form
@@ -90,7 +141,7 @@ app.get('/article/edit/:id', (req,res) => {
   });
 });
 
-// Update submit post route
+// Update Submit POST Route
 app.post('/articles/edit/:id', (req, res) => {
   let article = {};
   article.title = req.body.title;
@@ -104,6 +155,7 @@ app.post('/articles/edit/:id', (req, res) => {
       console.log(err);
       return;
     } else {
+      req.flash('success', 'Article updated');
       res.redirect('/');
     }
   });
