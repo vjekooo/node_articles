@@ -84,7 +84,9 @@ app.get('/', (req, res) => {
 
 // Route Files
 let articles = require('./routes/articles');
+let users = require('./routes/users');
 app.use('/articles', articles);
+app.use('/users', users);
 
 // 404
 app.use((req, res) => {
