@@ -4,6 +4,9 @@ const router = express.Router();
 // Bring in Article Model
 let Article = require('../models/article');
 
+// User Model
+let User = require('../models/user');
+
 // Add articles route
 router.get('/add', (req, res) => {
   res.render('add_article', {
@@ -15,7 +18,7 @@ router.get('/add', (req, res) => {
 router.post('/add', (req, res) => {
 
   req.checkBody('title', 'Title is required').notEmpty();
-  req.checkBody('author', 'Author is required').notEmpty();
+  // req.checkBody('author', 'Author is required').notEmpty();
   req.checkBody('body', 'Body is required').notEmpty();
 
   // Get Errors
@@ -29,7 +32,7 @@ router.post('/add', (req, res) => {
   } else {
     let article = new Article();
     article.title = req.body.title;
-    article.author = req.body.author;
+    article.author = req.user._id;
     article.body = req.body.body;
 
     article.save((err) => {
@@ -88,8 +91,11 @@ router.delete('/:id', (req, res) => {
 // Get single article
 router.get('/:id', (req,res) => {
   Article.findById(req.params.id, (err, article) => {
-    res.render('article', {
-      article: article
+    User.findById(article.author, (err, user) => {
+      res.render('article', {
+        article: article,
+        author: user.name
+      });
     });
   });
 });
