@@ -8,7 +8,7 @@ let Article = require('../models/article');
 let User = require('../models/user');
 
 // Add articles route
-router.get('/add', (req, res) => {
+router.get('/add', ensureAuthenticated, (req, res) => {
   res.render('add_article', {
     title: 'Add article'
   });
@@ -48,8 +48,12 @@ router.post('/add', (req, res) => {
 });
 
 // Load edit form
-router.get('/edit/:id', (req,res) => {
+router.get('/edit/:id', ensureAuthenticated, (req,res) => {
   Article.findById(req.params.id, (err, article) => {
+    if (article.author != req.user._id) {
+      req.flash('danger', 'Not authorised');
+      res.redirect('/');
+    }
     res.render('edit_article', {
       title: 'Edit article',
       article: article
@@ -79,12 +83,24 @@ router.post('/edit/:id', (req, res) => {
 
 // Delete article
 router.delete('/:id', (req, res) => {
+
+  if (!req.user._id) {
+    res.status(500).send();
+  }
+
   let query = {_id:req.params.id};
-  Article.remove(query, (err) => {
-    if (err) {
-      console.log(err);
+
+  Article.findById(req.params.id, (err, article) => {
+    if (article.author != req.user._id) {
+      res.status(500).send();
+    } else {
+      Article.remove(query, (err) => {
+        if (err) {
+          console.log(err);
+        }
+        res.send('Success');
+      });
     }
-    res.send('Success');
   });
 });
 
@@ -99,5 +115,15 @@ router.get('/:id', (req,res) => {
     });
   });
 });
+
+// Access Control
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    req.flash('danger', 'Please login');
+    res.redirect('/users/login');
+  }
+}
 
 module.exports = router;
